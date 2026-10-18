@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estacionamiento Concurrente · Simulador</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<header>
+    <div class="header-left">
+        <div class="logo">§</div>
+        <div>
+            <h1>ESTACIONAMIENTO <span class="accent">CONCURRENTE</span></h1>
+            <p>Semáforo contador · Exclusión mutua · Simulación en tiempo real</p>
+        </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+        <span class="dot"></span>
+        <span id="statusText">Inactivo</span>
+    </div>
+</header>
+
+<section class="panel">
+    <div class="input-group">
+        <label for="total">Vehículos</label>
+        <div class="input-wrapper">
+            <input type="number" id="total" value="10" min="1" max="50">
+        </div>
+    </div>
+    <div class="input-group">
+        <label for="capacidad">Capacidad</label>
+        <div class="input-wrapper">
+            <input type="number" id="capacidad" value="4" min="1" max="20">
+        </div>
+    </div>
+    <div class="actions">
+        <button id="btnIniciar" class="btn-primary">
+            <span class="btn-icon">▶</span>
+            <span>Iniciar simulación</span>
+        </button>
+        <button id="btnLimpiar" class="btn-secondary">
+            <span class="btn-icon">×</span>
+            <span>Limpiar</span>
+        </button>
+    </div>
+</section>
+
+<section class="metricas">
+    <div class="card card-amber">
+        <div class="card-tag">Ocupados</div>
+        <div class="card-value" id="ocupados">0</div>
+        <div class="card-label">Vehículos dentro</div>
+        <div class="card-bar"><div class="card-bar-fill" id="ocupadosBar"></div></div>
+    </div>
+    <div class="card card-gold">
+        <div class="card-tag">Capacidad</div>
+        <div class="card-value" id="capacidadVista">4</div>
+        <div class="card-label">Espacios totales</div>
+    </div>
+    <div class="card card-lime">
+        <div class="card-tag">Máximo</div>
+        <div class="card-value" id="maxSim">0</div>
+        <div class="card-label">Simultáneos históricos</div>
+    </div>
+    <div class="card card-coral">
+        <div class="card-tag">Tiempo</div>
+        <div class="card-value" id="tiempo">0s</div>
+        <div class="card-label">Transcurrido</div>
+    </div>
+</section>
+
+<section class="visualizacion">
+    <div class="viz-header">
+        <div class="viz-title">
+            <span class="pulse-dot"></span>
+            <h2>Vista del estacionamiento</h2>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-shine"></div>
+            </div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+    </div>
+
+    <div class="estacionamiento-stage">
+        <div class="road"></div>
+        <div class="estacionamiento-grid" id="estacionamientoGrid"></div>
+    </div>
+
+    <div class="cola-section">
+        <div class="cola-header">
+            <span class="cola-symbol">⋯</span>
+            <h3>Cola de espera</h3>
+            <span class="cola-count" id="colaCount">0</span>
+        </div>
+        <div class="cola-container" id="colaContainer">
+            <div class="cola-empty">Sin vehículos esperando</div>
+        </div>
+    </div>
+</section>
+
+<section class="log-section">
+    <div class="log-header">
+        <div class="viz-title">
+            <span class="pulse-dot red"></span>
+            <h2>Bitácora de eventos</h2>
+        </div>
+        <span class="log-count" id="logCount">0 eventos</span>
+    </div>
+    <div id="logContainer" class="log-container"></div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
