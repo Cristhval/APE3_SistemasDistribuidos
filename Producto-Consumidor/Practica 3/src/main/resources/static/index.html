@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fábrica de Ensamblaje · Productor–Consumidor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ HEADER — MASTHEAD ============ -->
+<header>
+    <div class="header-left">
+        <div class="logo">P·C</div>
+        <div>
+            <h1>Fábrica de <span class="accent">ensamblaje</span></h1>
+            <p>Productor–Consumidor · almacén acotado de 5 piezas · Spring Boot + Docker</p>
+        </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+        <span class="dot"></span>
+        <span id="statusText">En espera</span>
+    </div>
+</header>
+
+<!-- ============ PANEL — CONFIGURACIÓN ============ -->
+<section class="panel">
+    <div class="input-group">
+        <label for="productores">Número de productores</label>
+        <div class="input-wrapper">
+            <input type="number" id="productores" value="2" min="1" max="10" step="1">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="consumidores">Número de consumidores</label>
+        <div class="input-wrapper">
+            <input type="number" id="consumidores" value="2" min="1" max="10" step="1">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="piezas">Piezas por productor</label>
+        <div class="input-wrapper">
+            <input type="number" id="piezas" value="10" min="1" max="50" step="1">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label for="velocidad">Ritmo · ms por operación</label>
+        <div class="input-wrapper">
+            <input type="number" id="velocidad" value="1500" min="0" max="6000" step="100">
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-primary" id="btnIniciar">
+            <span class="btn-icon">&#9654;</span> Iniciar
+        </button>
+        <button class="btn-secondary" id="btnAplicar" disabled>
+            <span class="btn-icon">&#8635;</span> Aplicar ritmo
+        </button>
+        <button class="btn-secondary" id="btnDetener" disabled>
+            <span class="btn-icon">&#9632;</span> Detener
+        </button>
+    </div>
+
+    <p class="panel-error" id="panelError" hidden></p>
+</section>
+
+<!-- ============ MÉTRICAS — DATOS CLAVE ============ -->
+<section class="metricas">
+    <div class="card card-amber">
+        <span class="card-tag">Almacén</span>
+        <span class="card-value" id="mAlmacen">0</span>
+        <span class="card-label">piezas en el búfer · capacidad 5</span>
+        <div class="card-bar"><div class="card-bar-fill" id="barAlmacen"></div></div>
+    </div>
+
+    <div class="card card-gold">
+        <span class="card-tag">Producidas</span>
+        <span class="card-value" id="mProducidas">0</span>
+        <span class="card-label">piezas fabricadas en total</span>
+        <div class="card-bar"><div class="card-bar-fill" id="barProducidas"></div></div>
+    </div>
+
+    <div class="card card-lime">
+        <span class="card-tag">Consumidas</span>
+        <span class="card-value" id="mConsumidas">0</span>
+        <span class="card-label">piezas retiradas del búfer</span>
+        <div class="card-bar"><div class="card-bar-fill" id="barConsumidas"></div></div>
+    </div>
+
+    <div class="card card-coral">
+        <span class="card-tag">Ritmo</span>
+        <span class="card-value" id="mRitmo">1500</span>
+        <span class="card-label">milisegundos por operación</span>
+        <div class="card-bar"><div class="card-bar-fill" id="barRitmo"></div></div>
+    </div>
+</section>
+
+<!-- ============ VISUALIZACIÓN ============ -->
+<section class="visualizacion">
+    <div class="viz-header">
+        <div class="viz-title">
+            <span class="pulse-dot" id="pulseDot"></span>
+            <h2>Almacén compartido</h2>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+    </div>
+
+    <div class="estacionamiento-stage">
+        <div class="road"></div>
+        <div class="estacionamiento-grid" id="grid"></div>
+
+        <div class="cola-section">
+            <div class="cola-header">
+                <span class="cola-symbol">&raquo;</span>
+                <h3>Piezas fabricadas recientemente</h3>
+                <span class="cola-count" id="colaCount">0</span>
+            </div>
+            <div class="cola-container" id="cola">
+                <span class="cola-empty">Aún no se ha fabricado ninguna pieza</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ BITÁCORA DE EVENTOS ============ -->
+<section class="log-section">
+    <div class="log-header">
+        <div class="viz-title">
+            <h2>Bitácora de eventos</h2>
+        </div>
+        <span class="log-count" id="logCount">0 eventos</span>
+    </div>
+    <div class="log-container" id="logContainer">
+        <div class="log-entry inicio">
+            <span class="hora">--:--:--</span>
+            <span class="msg">Panel listo. Pulse «Iniciar» para comenzar la simulación.</span>
+        </div>
+    </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
