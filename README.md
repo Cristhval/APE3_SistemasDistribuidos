@@ -121,7 +121,7 @@ Las implementaciones descritas en el informe utilizan tecnologías según cada e
 
 - **Ejercicio 1 — Estacionamiento:** []()
 - **Ejercicio 2 — Cajero automático:** []()
-- **Ejercicio 3 — Fábrica Productor-Consumidor:** []()
+- **Ejercicio 3 — Fábrica Productor-Consumidor:** [Ejercicio 3](Producto-Consumidor)
 - **Ejercicio 4 — Cruce de vehículos:** []().
 - **Ejercicio 5 — Centro de impresión:** []()
 
