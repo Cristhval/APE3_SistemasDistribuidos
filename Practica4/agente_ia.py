@@ -11,18 +11,18 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3-coder:30b")
 
 def consultar_agente_ia(data):
     """
-    Envía la petición en lenguaje natural del usuario a qwen3-coder:30b 
-    a través de Open WebUI y obtiene tanto la respuesta como la clasificación.
+    Módulo independiente de IA: consulta a qwen3-coder:30b vía Open WebUI 
+    solicitando una respuesta breve y una clasificación clara.
     """
     try:
         texto_peticion = data.get("peticion", str(data))
         
+        # Prompt optimizado para respuestas breves que no saturen la terminal
         prompt = f"""
-        El usuario ha enviado la siguiente petición o consulta técnica: "{texto_peticion}".
-        
+        Analiza brevemente la siguiente petición: "{texto_peticion}".
         Instrucciones estrictas:
-        1. Resuelve, explica o responde detalladamente a lo que el usuario está solicitando.
-        2. Debes incluir obligatoriamente en tu respuesta la palabra "CRITICO" o "NORMAL" al inicio para clasificar la prioridad de la tarea.
+        1. Responde de forma muy concisa y directa (máximo 3 líneas o viñetas cortas).
+        2. Incluye obligatoriamente al inicio la palabra CRITICO o NORMAL.
         """
 
         headers = {
@@ -47,14 +47,14 @@ def consultar_agente_ia(data):
         resultado = response.json()
         texto = resultado["choices"][0]["message"]["content"].strip()
         
-        print(f"\n==========================================")
-        print(f"[RESPUESTA DE LA IA - qwen3-coder:30b]:\n{texto}")
-        print(f"==========================================\n")
+        print(f"\n------------------------------------------")
+        print(f"[RESPUESTA]:\n{texto}")
+        print(f"------------------------------------------\n")
 
-        # Clasificación para el enrutamiento por sockets TCP
+        # Criterio de distribución para los workers
         if "CRITICO" in texto.upper():
-            return 0  # Redirige al Worker 7001
-        return 1      # Redirige al Worker 7002
+            return 0  # Enruta al Worker 7001
+        return 1      # Enruta al Worker 7002
 
     except Exception as e:
         print(f"[AGENTE IA] Error al conectar con Open WebUI: {e}")

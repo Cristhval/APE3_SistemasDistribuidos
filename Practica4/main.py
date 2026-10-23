@@ -3,23 +3,23 @@ import socket
 import json
 from agente_ia import consultar_agente_ia
 
+# Nodos trabajadores (Workers) definidos en la práctica
 WORKERS = [("127.0.0.1", 7001), ("127.0.0.1", 7002)]
 
 def productor_interactivo(queue_pedidos):
     print("\n==================================================")
-    print("   MODO INTERACTIVO - PETICIONES LIBRES A LA IA   ")
+    print("   MODO INTERACTIVO - SISTEMA DISTRIBUIDO IPC/TCP ")
     print("==================================================")
     
     contador = 1
     while True:
         try:
             print(f"\n--- NUEVA PETICIÓN [ID: {contador}] ---")
-            texto_usuario = input("Escribe tu consulta, código o petición para la IA: ")
+            texto_usuario = input("Escribe tu consulta para la IA: ")
             
             if not texto_usuario.strip():
                 continue
             
-            # Empaqueta tu texto en el mensaje IPC
             pedido = {
                 "id_pedido": contador,
                 "peticion": texto_usuario
@@ -35,16 +35,16 @@ def productor_interactivo(queue_pedidos):
 def procesador(queue_entrada, queue_salida):
     while True:
         pedido = queue_entrada.get()
-        print(f"[PROCESADOR IPC] Extrayendo de la cola el pedido ID: {pedido['id_pedido']}")
+        print(f"[PROCESADOR IPC] Validando pedido ID: {pedido['id_pedido']}")
         pedido["estado"] = "VALIDADO"
         queue_salida.put(pedido)
 
 def gateway_tcp_client(queue_procesados):
     while True:
         pedido = queue_procesados.get()
-        print(f"[GATEWAY] Consultando a qwen3-coder:30b para el pedido ID: {pedido['id_pedido']}...")
+        print(f"[GATEWAY] Consultando a la IA para el pedido ID: {pedido['id_pedido']}...")
         
-        # Envía la petición real al modelo mediante Open WebUI
+        # Invocación al módulo agente_ia.py conectado a la API de la universidad
         idx_worker = consultar_agente_ia(pedido)
         
         if idx_worker is None:
@@ -58,7 +58,7 @@ def gateway_tcp_client(queue_procesados):
             s.connect(destino)
             s.send(json.dumps(pedido).encode())
             s.close()
-            print(f"[GATEWAY TCP] Resultado del pedido #{pedido['id_pedido']} despachado al Worker en {destino}\n")
+            print(f"[GATEWAY TCP] Paquete #{pedido['id_pedido']} despachado al Worker en {destino}\n")
         except Exception as e:
             print(f"[ERROR TCP] No se pudo conectar con el worker {destino}: {e}\n")
 
