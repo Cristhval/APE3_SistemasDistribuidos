@@ -6,9 +6,8 @@ from agente_ia import consultar_agente_ia
 
 # Direcciones IP reales de las computadoras remotas de tus compañeros/laboratorio
 WORKERS = [
-    ("192.168.1.102", 7001),  # Computadora Remota 1 (Worker 1)
-    #("192.168.100.120", 7001), # Computadora Remota 2 (Worker 2)
-    ("192.168.1.112", 7001) # Computadora Remota 3 (Worker 3)
+    #("192.168.1.102", 7001),  # Computadora Remota 1 (Worker 1)
+    #("192.168.1.112", 7001) # Computadora Remota 3 (Worker 3)
 ]
 
 def productor_pruebas_simultaneas(queue_pedidos):
