@@ -1,0 +1,11 @@
+# Archivos de datos de Mosquitto
+mosquitto/data/
+
+# Bases de datos locales
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+venv/
