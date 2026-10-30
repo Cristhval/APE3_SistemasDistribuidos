@@ -8,8 +8,8 @@ BROKER = "localhost"
 PUERTO = 1883
 VEHICULOS = ["VH-001", "VH-002", "VH-003"]
 
-def on_connect(client, userdata, flags, rc):
-    print(f"[{datetime.datetime.now()}] Conectado al broker MQTT (rc={rc})")
+def on_connect(client, userdata, flags, rc, properties=None):
+    print(f"[{datetime.datetime.now()}] Simulador conectado (rc={rc})")
 
 def simular_gps():
     return {
@@ -31,7 +31,8 @@ def simular_combustible():
     }
 
 def main():
-    client = mqtt.Client()
+    # Se agrega CallbackAPIVersion.VERSION2 para evitar warnings
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = on_connect
     client.connect(BROKER, PUERTO, 60)
     client.loop_start()
@@ -44,19 +45,21 @@ def main():
                 
                 # GPS
                 datos_gps = {"vehicle_id": vehiculo, "timestamp": timestamp, **simular_gps()}
-                client.publish(f"flota/{vehiculo}/gps", json.dumps(datos_gps))
+                client.publish(f"flota/{vehiculo}/gps", json.dumps(datos_gps), qos=1)
                 
                 # Temperatura
                 datos_temp = {"vehicle_id": vehiculo, "timestamp": timestamp, **simular_temperatura()}
-                client.publish(f"flota/{vehiculo}/temperatura", json.dumps(datos_temp))
+                client.publish(f"flota/{vehiculo}/temperatura", json.dumps(datos_temp), qos=1)
                 
                 # Combustible
                 datos_fuel = {"vehicle_id": vehiculo, "timestamp": timestamp, **simular_combustible()}
-                client.publish(f"flota/{vehiculo}/combustible", json.dumps(datos_fuel))
+                client.publish(f"flota/{vehiculo}/combustible", json.dumps(datos_fuel), qos=1)
                 
-                print(f"[{timestamp}] Datos publicados para {vehiculo}")
+                print(f"[{timestamp}] 3 mensajes publicados para {vehiculo}")
+                # Pausa de 5s después de cada vehículo
+                time.sleep(5) 
             
-            time.sleep(5)
+            # Opcional: pausa extra entre rondas
     except KeyboardInterrupt:
         print("Deteniendo simulador...")
         client.loop_stop()

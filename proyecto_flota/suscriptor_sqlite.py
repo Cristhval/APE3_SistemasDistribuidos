@@ -1,6 +1,5 @@
 import json
 import sqlite3
-import datetime
 import paho.mqtt.client as mqtt
 
 BROKER = "localhost"
@@ -22,6 +21,14 @@ def inicializar_db():
     conn.close()
     print("Base de datos inicializada.")
 
+# NUEVO: Suscripción dentro de on_connect 
+def on_connect(client, userdata, flags, rc, properties=None):
+    print(f"Suscriptor conectado al broker (rc={rc})")
+    client.subscribe("flota/+/gps")
+    client.subscribe("flota/+/temperatura")
+    client.subscribe("flota/+/combustible")
+    print("Suscripción exitosa a los topics de la flota.")
+
 def on_message(client, userdata, msg):
     topic = msg.topic
     try:
@@ -38,15 +45,15 @@ def on_message(client, userdata, msg):
     
     elif "/temperatura" in topic:
         temp = payload["temperature"]
-        if temp > 4:
-            print(f"🚨 ALERTA: {payload['vehicle_id']} temperatura alta ({temp}°C)")
+        if temp > 4: # Regla PPT diapositiva 8
+            print(f"ALERTA: {payload['vehicle_id']} temperatura alta ({temp}°C)")
         cursor.execute("INSERT INTO temp_data (vehicle_id, temperature, unit, timestamp) VALUES (?, ?, ?, ?)",
                        (payload["vehicle_id"], temp, payload["unit"], payload["timestamp"]))
     
     elif "/combustible" in topic:
         fuel = payload["fuel_level"]
-        if fuel < 20:
-            print(f"🚨 ALERTA: {payload['vehicle_id']} combustible bajo ({fuel}%)")
+        if fuel < 20: # Regla PPT diapositiva 8
+            print(f"ALERTA: {payload['vehicle_id']} combustible bajo ({fuel}%)")
         cursor.execute("INSERT INTO fuel_data (vehicle_id, fuel_level, unit, timestamp) VALUES (?, ?, ?, ?)",
                        (payload["vehicle_id"], fuel, payload["unit"], payload["timestamp"]))
 
@@ -55,15 +62,13 @@ def on_message(client, userdata, msg):
 
 def main():
     inicializar_db()
-    client = mqtt.Client()
+    # Se agrega CallbackAPIVersion.VERSION2
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.on_connect = on_connect
     client.on_message = on_message
+    
     client.connect(BROKER, PUERTO, 60)
-    
-    client.subscribe("flota/+/gps")
-    client.subscribe("flota/+/temperatura")
-    client.subscribe("flota/+/combustible")
-    
-    print("Suscriptor activo. Escuchando topics flota/+/...")
+    print("Suscriptor activo. Esperando datos...")
     client.loop_forever()
 
 if __name__ == "__main__":
