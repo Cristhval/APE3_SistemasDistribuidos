@@ -1,88 +1,90 @@
 import json
+import time
+import random
+import datetime
 import paho.mqtt.client as mqtt
-import pika
-import sys
 
-MQTT_BROKER = "localhost"
-MQTT_PORT = 1883
-RABBIT_HOST = "localhost"
-RABBIT_PORT = 5672
+# IP de tu laptop principal (el servidor / broker)
+BROKER_HOST = "10.20.200.115"
+BROKER = BROKER_HOST
+PUERTO = 1883
 
-def conectar_rabbitmq():
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBIT_HOST, port=RABBIT_PORT))
-        channel = connection.channel()
-        
-        # DECLARAR LAS 3 COLAS DURADERAS 
-        channel.queue_declare(queue='cola.gps.telemetria', durable=True)
-        channel.queue_declare(queue='cola.alertas.temperatura', durable=True)
-        channel.queue_declare(queue='cola.combustible.nivel', durable=True)
-        
-        print("Conectado a RabbitMQ y 3 colas declaradas.")
-        return connection, channel
-    except Exception as e:
-        print(f"Error conectando a RabbitMQ: {e}")
-        sys.exit(1)
+# Etiqueta única que identifica esta laptop
+LAPTOP_ORIGEN = "Valverde"
 
-def on_message(client, userdata, msg):
-    channel = userdata['rabbitmq_channel']
-    topic = msg.topic
-    try:
-        payload = json.loads(msg.payload.decode())
-    except json.JSONDecodeError:
-        return
+VEHICULOS = ["vehiculo_01", "vehiculo_02", "vehiculo_03"]
 
-    # 1. LÓGICA PARA GPS (Todos los mensajes GPS van a su cola)
-    if "/gps" in topic:
-        channel.basic_publish(
-            exchange='',
-            routing_key='cola.gps.telemetria',
-            body=json.dumps(payload),
-            properties=pika.BasicProperties(delivery_mode=2)
-        )
-        print(f"[Bridge] GPS enviado a RabbitMQ: {payload['vehicle_id']}")
 
-    # 2. LÓGICA PARA TEMPERATURA
-    elif "/temperatura" in topic:
-        if payload.get("temperature", 0) > 4:
-            alerta = {"type": "TEMP_ALERT", "message": "Temperatura excedida", **payload}
-            channel.basic_publish(
-                exchange='',
-                routing_key='cola.alertas.temperatura',
-                body=json.dumps(alerta),
-                properties=pika.BasicProperties(delivery_mode=2)
-            )
-            print(f"[Bridge] ALERTA enviada a RabbitMQ: {payload['vehicle_id']} - Temp Alta")
+def on_connect(client, userdata, flags, rc, properties=None):
+    print(f"[{datetime.datetime.now()}] Simulador de {LAPTOP_ORIGEN} conectado (rc={rc})")
 
-    # 3. LÓGICA PARA COMBUSTIBLE
-    elif "/combustible" in topic:
-        if payload.get("fuel_level", 100) < 20:
-            alerta = {"type": "FUEL_LOW", "message": "Combustible bajo", **payload}
-            channel.basic_publish(
-                exchange='',
-                routing_key='cola.combustible.nivel',
-                body=json.dumps(alerta),
-                properties=pika.BasicProperties(delivery_mode=2)
-            )
-            print(f"[Bridge] ALERTA enviada a RabbitMQ: {payload['vehicle_id']} - Combustible Bajo")
+
+def simular_gps():
+    return {
+        "lat": round(-2.1709 + random.uniform(-0.01, 0.01), 6),
+        "lng": round(-79.9224 + random.uniform(-0.01, 0.01), 6),
+        "speed": round(random.uniform(20, 80), 1),
+    }
+
+
+def simular_temperatura():
+    return {
+        "temperature": round(random.uniform(-5, 8), 1),
+        "unit": "celsius",
+    }
+
+
+def simular_combustible():
+    return {
+        "fuel_level": round(random.uniform(10, 100), 1),
+        "unit": "percent",
+    }
+
 
 def main():
-    conn_rabbit, channel_rabbit = conectar_rabbitmq()
-    
-    # Usamos CallbackAPIVersion.VERSION2 para evitar warnings
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata={'rabbitmq_channel': channel_rabbit})
-    client.on_message = on_message
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-    
-    client.subscribe("flota/#")
-    print("Bridge MQTT-RabbitMQ iniciado. Esperando mensajes...")
-    
-    try:
-        client.loop_forever()
-    except KeyboardInterrupt:
-        print("Deteniendo Bridge...")
-        client.disconnect()
-        conn_rabbit.close()
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.on_connect = on_connect
+    client.connect(BROKER, PUERTO, 60)
+    client.loop_start()
 
-if __name__ == "__main__":
+    print(f"Iniciando simulador de sensores IoT para [{LAPTOP_ORIGEN}]...")
+    try:
+        while True:
+            for vehiculo in VEHICULOS:
+                timestamp = datetime.datetime.now().isoformat()
+
+                # Se incluye la etiqueta de la laptop dentro del JSON también
+                datos_gps = {
+                    "laptop_origen": LAPTOP_ORIGEN,
+                    "vehicle_id": vehiculo,
+                    "timestamp": timestamp,
+                    **simular_gps()
+                }
+                client.publish(f"flota/{LAPTOP_ORIGEN}/{vehiculo}/gps", json.dumps(datos_gps), qos=1)
+
+                datos_temp = {
+                    "laptop_origen": LAPTOP_ORIGEN,
+                    "vehicle_id": vehiculo,
+                    "timestamp": timestamp,
+                    **simular_temperatura()
+                }
+                client.publish(f"flota/{LAPTOP_ORIGEN}/{vehiculo}/temperatura", json.dumps(datos_temp), qos=1)
+
+                datos_fuel = {
+                    "laptop_origen": LAPTOP_ORIGEN,
+                    "vehicle_id": vehiculo,
+                    "timestamp": timestamp,
+                    **simular_combustible()
+                }
+                client.publish(f"flota/{LAPTOP_ORIGEN}/{vehiculo}/combustible", json.dumps(datos_fuel), qos=1)
+
+                print(f"[{timestamp}] 3 mensajes publicados por {LAPTOP_ORIGEN} para {vehiculo}")
+                time.sleep(5)
+    except KeyboardInterrupt:
+        print("Deteniendo simulador...")
+        client.loop_stop()
+        client.disconnect()
+
+
+if _name_ == "_main_":
     main()
